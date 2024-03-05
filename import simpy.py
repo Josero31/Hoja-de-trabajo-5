@@ -5,10 +5,10 @@ import statistics
 RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
 
-INTERVAL = 1
-RAM_CAPACITY = 100
+INTERVAL = 10
+RAM_CAPACITY = 200
 CPU_SPEED = 3
-NUM_PROCESSES = 50
+NUM_PROCESSES = 200
 
 # Lista para almacenar los tiempos de finalización de todos los procesos
 process_times = []
@@ -61,5 +61,7 @@ env.run()
 
 # Al final del programa, calculamos el tiempo promedio
 average_time = statistics.mean(process_times)
+std_dev = statistics.pstdev(process_times)
 
 print(f"Tiempo promedio: {average_time}")
+print(f"Desviación estándar: {std_dev}")
