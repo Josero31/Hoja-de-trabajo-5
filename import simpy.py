@@ -1,5 +1,6 @@
 import simpy
 import random
+import statistics
 
 RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
@@ -8,6 +9,9 @@ INTERVAL = 1
 RAM_CAPACITY = 100
 CPU_SPEED = 3
 NUM_PROCESSES = 50
+
+# Lista para almacenar los tiempos de finalización de todos los procesos
+process_times = []
 
 class Process:
     def __init__(self, env, id, ram, cpu):
@@ -22,25 +26,26 @@ class Process:
 
     def run(self):
         self.start_time = self.env.now
-        print(f"Proceso {self.id} iniciado en tiempo {self.start_time}")  # Agrega esta línea
+        print(f"Proceso {self.id} iniciado en tiempo {self.start_time}")
         yield self.env.process(self.get_ram())
         yield self.env.process(self.run_instructions())
         self.end_time = self.env.now
-        print(f"Proceso {self.id} terminado en tiempo {self.end_time}")  # Agrega esta línea
+        print(f"Proceso {self.id} terminado en tiempo {self.end_time}")
         self.ram.put(self.ram_required)
+        process_times.append(self.end_time - self.start_time)
 
     def get_ram(self):
-        print(f"Proceso {self.id} solicitando RAM")  # Agrega esta línea
+        print(f"Proceso {self.id} solicitando RAM")
         yield self.ram.get(self.ram_required)
 
     def run_instructions(self):
-        while self.instructions == 1:
+        while self.instructions > 0:
             with self.cpu.request() as req:
                 yield req
-                yield self.env.timeout(3)
+                yield self.env.timeout(1)
                 self.instructions -= min(CPU_SPEED, self.instructions)
-                print(f"Proceso {self.id} ejecutando instrucciones, restantes: {self.instructions}")  # Agrega esta línea
-            
+                print(f"Proceso {self.id} ejecutando instrucciones, restantes: {self.instructions}")
+
 def process_generator(env, ram, cpu):
     for i in range(NUM_PROCESSES):
         process = Process(env, i, ram, cpu)
@@ -51,4 +56,10 @@ env = simpy.Environment()
 ram = simpy.Container(env, init=RAM_CAPACITY, capacity=RAM_CAPACITY)
 cpu = simpy.Resource(env, capacity=1)
 env.process(process_generator(env, ram, cpu))
+
 env.run()
+
+# Al final del programa, calculamos el tiempo promedio
+average_time = statistics.mean(process_times)
+
+print(f"Tiempo promedio: {average_time}")
