@@ -19,3 +19,24 @@ class Process:
         self.ram = ram
         self.start_time = 0
         self.end_time = 0
+
+    def run(self):
+        self.start_time = self.env.now
+        print(f"Proceso {self.id} iniciado en tiempo {self.start_time}")  # Agrega esta línea
+        yield self.env.process(self.get_ram())
+        yield self.env.process(self.run_instructions())
+        self.end_time = self.env.now
+        print(f"Proceso {self.id} terminado en tiempo {self.end_time}")  # Agrega esta línea
+        self.ram.put(self.ram_required)
+
+    def get_ram(self):
+        print(f"Proceso {self.id} solicitando RAM")  # Agrega esta línea
+        yield self.ram.get(self.ram_required)
+
+    def run_instructions(self):
+        while self.instructions == 1:
+            with self.cpu.request() as req:
+                yield req
+                yield self.env.timeout(3)
+                self.instructions -= min(CPU_SPEED, self.instructions)
+                print(f"Proceso {self.id} ejecutando instrucciones, restantes: {self.instructions}")  # Agrega esta línea
