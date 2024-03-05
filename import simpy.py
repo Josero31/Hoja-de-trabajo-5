@@ -40,3 +40,15 @@ class Process:
                 yield self.env.timeout(3)
                 self.instructions -= min(CPU_SPEED, self.instructions)
                 print(f"Proceso {self.id} ejecutando instrucciones, restantes: {self.instructions}")  # Agrega esta línea
+            
+def process_generator(env, ram, cpu):
+    for i in range(NUM_PROCESSES):
+        process = Process(env, i, ram, cpu)
+        env.process(process.run())
+        yield env.timeout(random.expovariate(1.0 / INTERVAL))
+
+env = simpy.Environment()
+ram = simpy.Container(env, init=RAM_CAPACITY, capacity=RAM_CAPACITY)
+cpu = simpy.Resource(env, capacity=1)
+env.process(process_generator(env, ram, cpu))
+env.run()
